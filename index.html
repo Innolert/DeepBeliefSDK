@@ -22,7 +22,7 @@
     <div class="span12 header">
       <div>
         <div class="logo">
-          DeepBeliefSDK Javascript Demo
+          Innolert Evaluation Center
         </div>
       </div>
     </div>
@@ -31,6 +31,9 @@
 </div> <!-- /container -->
 
 <div class="demo-container">
+  <div class="images-list">
+  </div>
+
   <video class="video-preview" id="live" autoplay></video>
 
   <div class="top-section">
@@ -43,7 +46,7 @@
     </div>
   </div>
 
-  <div class="action-section">
+  <!-- <div class="action-section">
     <div class="file-button-container">
       <span class="file-wrapper">
         <input type="file" name="photo" id="photo" />
@@ -53,7 +56,7 @@
     <div class="action-button webgl-toggle">Enable WebGL</div>
 
     <a class="sdk-button" href="https://github.com/jetpacapp/DeepBeliefSDK"><span><i class="icon-github"></i></span><span><strong>SOURCE</strong><br>On Github</span></a>
-  </div>
+  </div> -->
 
   <div class="loading-container">
     <div class="loading-message">
@@ -84,48 +87,49 @@ var g_isWebcamOn = false;
 var g_wantDemo = true;
 var g_network;
 var g_video;
-var g_demoPhotoUrls = [
-  'baguette.png',
-  'coffee.png',
-  'cup.png',
-  'dalmatian.png',
-  'menu.png',
-  'redwine.png',
-  'squash.png',
-  'vwbeetle.png',
-  'boat.png',
-  'corgi.png',
-  'daisy.png',
-  'laptop.png',
-  'pumpkin.png',
-  'spaghetti.png',
-  'trombone.png',
-  'abacus.jpg',
-  'artichoke.jpg',
-  'bellpepper.jpg',
-  'candle.jpg',
-  'meatloaf.jpg',
-  'peacock.jpg',
-  'pillbottle.jpg',
-  'pineapple.jpg',
-  'strawberry.jpg',
-  'vegetablebowl.jpg',
-  'vespa.jpg',
-  'accordion.jpg',
-  'beachlady.jpg',
-  'building.jpg',
-  'elephantgirl.jpg',
-  'harp.jpg',
-  'landscape.jpg',
-  'marina.jpg',
-  'piano.jpg',
-  'pizza.jpg',
-  'pooltable.jpg',
-  'sax.jpg',
-  'seashoreandcliff.jpg',
-  'sunglasses.jpg',
-  'teresacoffeeart.jpg'
-];
+var g_demoPhotoUrls = [];
+// var g_demoPhotoUrls = [
+//   'baguette.png',
+//   'coffee.png',
+//   'cup.png',
+//   'dalmatian.png',
+//   'menu.png',
+//   'redwine.png',
+//   'squash.png',
+//   'vwbeetle.png',
+//   'boat.png',
+//   'corgi.png',
+//   'daisy.png',
+//   'laptop.png',
+//   'pumpkin.png',
+//   'spaghetti.png',
+//   'trombone.png',
+//   'abacus.jpg',
+//   'artichoke.jpg',
+//   'bellpepper.jpg',
+//   'candle.jpg',
+//   'meatloaf.jpg',
+//   'peacock.jpg',
+//   'pillbottle.jpg',
+//   'pineapple.jpg',
+//   'strawberry.jpg',
+//   'vegetablebowl.jpg',
+//   'vespa.jpg',
+//   'accordion.jpg',
+//   'beachlady.jpg',
+//   'building.jpg',
+//   'elephantgirl.jpg',
+//   'harp.jpg',
+//   'landscape.jpg',
+//   'marina.jpg',
+//   'piano.jpg',
+//   'pizza.jpg',
+//   'pooltable.jpg',
+//   'sax.jpg',
+//   'seashoreandcliff.jpg',
+//   'sunglasses.jpg',
+//   'teresacoffeeart.jpg'
+// ];
 
 function onNetworkProgress(percentComplete) {
   var progressBar = document.getElementById('network-progress-bar');
@@ -137,8 +141,58 @@ function onNetworkProgress(percentComplete) {
 
 function onNetworkLoad() {
   $('.loading-container').css({display: 'none'});
-  startDemoClassification();
-  g_isReady = true;
+
+  var accessTokenArr = window.location.hash.match(/\#access_token=(.*)$/),
+    access_token = accessTokenArr ? accessTokenArr[1] : null;
+
+  if (!access_token) {
+    window.location = 'https://www.instagram.com/oauth/authorize/?client_id=9bb608ceb24441d1bfe2d45ab9f54d37&scope=basic+public_content+follower_list+comments+relationships+likes&redirect_uri=http://localhost/DeepBeliefSDK/&response_type=token';
+  }
+
+  function extractImagesByUserId(userId) {
+    $.ajax({
+      url: 'https://api.instagram.com/v1/users/' + userId + '/media/recent?access_token=' + access_token,
+      crossDomain: true,
+      dataType: 'jsonp',
+    })
+    .done(function(response) {
+      // alert(JSON.stringify(response));
+      for (var i = 0 ; i < response.data.length ; i++) {
+        g_demoPhotoUrls.push(response.data[i].images.standard_resolution.url);
+      }
+      startDemoClassification();
+    })
+    .fail(function(response) {
+      // alert(JSON.stringify(response));
+    });
+  }
+
+  var apiUrls = [
+    'https://api.instagram.com/v1/users/self/follows?access_token=' + access_token,
+    'https://api.instagram.com/v1/users/self/followed-by?access_token=' + access_token,
+    'https://api.instagram.com/v1/users/self/requested-by?access_token=' + access_token
+  ]
+
+  var i = apiUrls.length;
+  while(i--) {
+    $.ajax({
+      url: apiUrls[i],
+      crossDomain: true,
+      dataType: 'jsonp',
+    })
+    .done(function(response) {
+      var i = response.data.length;
+      while(i--) {
+        extractImagesByUserId(response.data[i].id);
+      }
+    })
+    .fail(function(response) {
+      alert(JSON.stringify(response));
+    });
+  }
+
+  // startDemoClassification();
+  // g_isReady = true;
 }
 
 function toggleWebGL() {
@@ -151,10 +205,16 @@ function startDemoClassification() {
     $('.vote-tag-container').hide();
     _.delay(startDemoClassification, 5000);
   }
-  var demoPhotoIndex = Math.floor(Math.random() * g_demoPhotoUrls.length);
-  var demoPhotoUrl = g_demoPhotoUrls[demoPhotoIndex];
-  var proxiedUrl = 'JavascriptLibrary/Images/' + demoPhotoUrl;
-  var demoImage = $('<img>');
+  // var demoPhotoIndex = Math.floor(Math.random() * g_demoPhotoUrls.length);
+  // var demoPhotoUrl = g_demoPhotoUrls[demoPhotoIndex];
+  // var proxiedUrl = 'JavascriptLibrary/Images/' + demoPhotoUrl;
+  var proxiedUrl = g_demoPhotoUrls.pop();
+
+  if (!proxiedUrl) {
+    return;
+  }
+
+  var demoImage = $('<img crossorigin="anonymous">');
   demoImage.on('load', function(event) {
     var demoImageElement = demoImage.get(0);
     if (g_wantDemo) {
@@ -231,6 +291,7 @@ function classifyImage(image, width, height) {
   });
   topResults = topResults.sort(function(a, b) { return (b.value - a.value); });
   topResults = _.first(topResults, 10);
+  var imagesList = $('.images-list');
   var resultsList = $('.results-list');
   resultsList.empty();
   if (topResults.length > 0) {
@@ -247,11 +308,13 @@ function classifyImage(image, width, height) {
       resultEntry.append(resultLabel);
       resultsList.append(resultEntry);
     });
+    imagesList.append('<div class="item"><img src="' + image.src + '"><table class="item-results-list">' + resultsList.html() + '</table></div>');
   } else {
     var resultEntry = $('<div>')
     .addClass('result-entry')
     .text('No results found');
     resultsList.append(resultEntry);
+    imagesList.append('<div class="item">' + resultsList.html() + '</div>');
   }
 
   // var holder = document.getElementsByClassName('twitter-button-holder')[0];

@@ -165,6 +165,7 @@ body#spotter {
 }
 
 .top-section {
+  display: none;
   width: 800px;
   height: 384px;
   margin: 0 auto;
@@ -804,4 +805,14 @@ p.small-text {
 
 .spotter-image-gallery .pager-numbers div {
 
+}
+
+
+/*** Eli did this ***/
+.images-list {
+  display: inline-block;
+}
+
+.images-list .item {
+  float: left;
 }
