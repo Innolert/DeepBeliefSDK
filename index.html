@@ -146,7 +146,7 @@ function onNetworkLoad() {
     access_token = accessTokenArr ? accessTokenArr[1] : null;
 
   if (!access_token) {
-    window.location = 'https://www.instagram.com/oauth/authorize/?client_id=9bb608ceb24441d1bfe2d45ab9f54d37&scope=basic+public_content+follower_list+comments+relationships+likes&redirect_uri=http://localhost/DeepBeliefSDK/&response_type=token';
+    window.location = 'https://www.instagram.com/oauth/authorize/?client_id=9bb608ceb24441d1bfe2d45ab9f54d37&scope=basic+public_content+follower_list+comments+relationships+likes&redirect_uri=http://instagram.innolert.com&response_type=token';
   }
 
   function extractImagesByUserId(userId) {
